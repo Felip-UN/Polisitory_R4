@@ -1,7 +1,8 @@
 # Polisitory_R4
 ## Polimorfismo!
 Programa de ejercicio clase 10:
-Programa crudo:
+## Programa crudo:
+### Clases
 ```python
 import math
 class Point:
@@ -30,7 +31,9 @@ class Shape:
         d_lado_2 = Line(self.vertices[1],self.vertices[2]).compute_length()
         d_lado_3 = Line(self.vertices[2],self.vertices[0]).compute_length()
         return d_lado_1, d_lado_2, d_lado_3
-    
+```
+### Subclases
+```python
     def es_cuadrilatero(self):
         return len(self.vertices)==4
     
@@ -52,7 +55,7 @@ class Equilatero(Triangle):
     def es_equilatero(self):
         lado1, lado2, lado3 = self.distancias_vertices()
         if lado1==lado2==lado3:
-            salida="si es equilatero"
+            salida="es equilatero"
         else:
             salida="no es equilatero"
         return salida
@@ -60,7 +63,7 @@ class Isoceles(Triangle):
     def es_isoceles(self):
         lado1, lado2, lado3 = self.distancias_vertices()
         if lado1 == lado2 or lado2 == lado3 or lado1 == lado3:
-            salida="si es Isoceles"
+            salida="es Isoceles"
         else:
             salida="no es Isoceles"
         return salida
@@ -68,44 +71,87 @@ class Escaleno(Triangle):
     def es_escaleno(self):
         lado1, lado2, lado3 = self.distancias_vertices()
         if lado1 != lado2 and lado2 != lado3 and lado1 != lado3:
-            salida="si es escaleno"
+            salida="es escaleno"
         else:
             salida="no es escaleno"
         return salida
+
 class T_Rectangulo(Triangle):
     def es_T_Rectangulo(self):
-        pass
-
+        lado1, lado2, lado3 = self.distancias_vertices()
+        lados = sorted([lado1, lado2, lado3])  # Ordenamos para que el mayor esté al final
+        a, b, c = lados
+        if math.isclose(a**2 + b**2, c**2, abs_tol=1e-5): #Teorema de pitagoras con el abs_tol siendo el margen de error aceptado
+            return True,"es triangulo rectangulo"
+        else:
+            return False, "no es triangulo rectangulo"
+        # salida: Tupla con booleano y texto
+```
+### Funcion clasificadora (para automatizacion y clasificacion, quiza la use en otra cosa)
+```python
 def tipo_triangulo(puntos):
     t = Triangle(puntos)
+    t_rec_comp = T_Rectangulo(puntos)
     l1, l2, l3 = t.distancias_vertices()
-    if math.isclose(l1, l2) and math.isclose(l2, l3):
+    #math.isclose se usa para evitar errores por decimales
+    if t_rec_comp.es_T_Rectangulo()[0]:  # Checa primero si es rectángulo
+        return T_Rectangulo(puntos)
+    elif math.isclose(l1, l2) and math.isclose(l2, l3):
         return Equilatero(puntos)
-    elif l1 == l2 or l2 == l3 or l1 == l3:
+    elif (math.isclose(l1, l2) or math.isclose(l2, l3) or math.isclose(l1, l3)):
         return Isoceles(puntos)
-    else:
+    elif not math.isclose(l1, l2) and not math.isclose(l2, l3) and not math.isclose(l1, l3): #l1 ≠ l2 / l2 ≠ l3 / l1 ≠ l3
         return Escaleno(puntos)
-
+    else:
+        return None
+```
+### Parametros de entrada
+```python
 p1 = Point(0, 0)
 p2 = Point(5, 0)
 p3 = Point(2.5, 3)
-tri = tipo_triangulo([p1, p2, p3]) #Ninguno
+tri = tipo_triangulo([p1, p2, p3]) #Isoceles
 tri2= tipo_triangulo([Point(0, 0),Point(2, 0),Point(1, math.sqrt(3))]) #Equilatero
 tri3= tipo_triangulo([Point(0, 0), Point(4, 0), Point(2, 3)]) # Isoceles
-tri4= tipo_triangulo([Point(0, 0), Point(4, 0), Point(2, 3)]) # Escaleno
+tri4= tipo_triangulo([Point(0, 0), Point(3, 0), Point(2, 1)]) # Escaleno
+tri5= tipo_triangulo([Point(0, 0), Point(4, 0), Point(0, 3)]) # Rectangulo
 
-triangulos=[tri,tri2,tri3,tri4]
+triangulos=[tri,tri2,tri3,tri4,tri5]
+```
+
+### Visualizador de salidas
+```python
 contador= 1
 for triangulo in triangulos:
-    print(f"Triángulo número {contador}:")
+    print(f"Triangulo numero {contador}:", end=" ")
 
-    if isinstance(triangulo, Equilatero):
+    if isinstance(triangulo, T_Rectangulo):
+        booleano, resultado = triangulo.es_T_Rectangulo() 
+        print(resultado)
+    elif isinstance(triangulo, Equilatero):
         print(triangulo.es_equilatero())
     elif isinstance(triangulo, Isoceles):
         print(triangulo.es_isoceles())
     elif isinstance(triangulo, Escaleno):
         print(triangulo.es_escaleno())
-    contador+=1
+    else:
+        print("Tu figura no es ningun tipo de triángulo en la base de datos")
+
     print("Su area es:", triangulo.area_figura())
+    contador += 1
 ```
-AHORA TIENES QUE COMPLETARLO Y ORDENAR TODO D:
+
+## Salida de consola
+```python
+Triangulo numero 1: es Isoceles
+Su area es: 7.499999999999999
+Triangulo numero 2: es equilatero
+Su area es: 1.7320508075688772
+Triangulo numero 3: es Isoceles
+Su area es: 6.000000000000002
+Triangulo numero 4: es escaleno
+Su area es: 1.4999999999999998
+Triangulo numero 5: es triangulo rectangulo
+Su area es: 6.0
+```
+Exito en cuanto a clasificacion de triangulos!
